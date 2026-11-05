@@ -17,7 +17,7 @@ func main() {
 	)
 
 	if err != nil {
-		log.Fatalf("Create model:", err)
+		log.Fatalf("Create model: %v", err)
 	}
 
 	// create prompt template
