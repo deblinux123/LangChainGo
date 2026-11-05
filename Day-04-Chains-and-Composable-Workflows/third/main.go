@@ -61,13 +61,19 @@ func main() {
 
 	categoryChain.OutputKey = "category"
 
-	inputText := `
-	Go is a statically typed programming language
-	developed at Google. It supports concurrency
-	through goroutines and channels. Go is widely
-	used for backend services and cloud infrastructure.
-	`
+	// inputText := `
+	// Go is a statically typed programming language
+	// developed at Google. It supports concurrency
+	// through goroutines and channels. Go is widely
+	// used for backend services and cloud infrastructure.
+	// `
 
+	inputText := `
+Retrieval-Augmented Generation (RAG) combines
+information retrieval with language models.
+It uses vector databases to retrieve relevant
+documents and provide context to an LLM.
+`
 	summerResult, err := chains.Call(
 		ctx,
 		summeryChain,
