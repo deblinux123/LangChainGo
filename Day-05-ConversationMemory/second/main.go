@@ -35,6 +35,7 @@ func (c *ChatBot) Chat(ctx context.Context, userInput string) (string, error) {
 		userInput,
 	))
 
+	c.history = trimHistory(c.history, 4)
 	response, err := c.model.GenerateContent(
 		ctx,
 		c.history,
@@ -108,9 +109,32 @@ func main() {
 		}
 
 		fmt.Println("Assistant:", answer)
+		fmt.Println("History messages:", len(chatbot.history))
 	}
 
 	if err := scanner.Err(); err != nil {
 		log.Printf("Input Error: %v", err)
 	}
+
+}
+
+func trimHistory(history []llms.MessageContent, windowSize int) []llms.MessageContent {
+	if len(history) <= 1 {
+		return history
+	}
+
+	systemMessage := history[0]
+	conversationMessage := history[1:]
+
+	maxMessages := windowSize * 4
+
+	if len(conversationMessage) > maxMessages {
+		conversationMessage = conversationMessage[len(conversationMessage)-maxMessages:]
+	}
+
+	result := make([]llms.MessageContent, 0, len(conversationMessage)+1)
+	result = append(result, systemMessage)
+	result = append(result, conversationMessage...)
+
+	return result
 }
