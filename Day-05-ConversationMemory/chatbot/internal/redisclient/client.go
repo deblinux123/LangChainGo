@@ -69,7 +69,7 @@ func (c *Client) GetHistory(
 	ctx context.Context,
 	sessionID string,
 ) ([]byte, error) {
-	key := "chat:sessoin:" + sessionID
+	key := "chat:session:" + sessionID
 
 	data, err := c.rdb.Get(
 		ctx,

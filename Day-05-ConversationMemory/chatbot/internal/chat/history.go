@@ -7,24 +7,29 @@ import (
 	"github.com/tmc/langchaingo/llms"
 )
 
+type StoredMessage struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
 type History struct {
-	Messages []llms.MessageContent `json:"messages"`
+	Messages []StoredMessage `json:"messages"`
 }
 
 func (h *History) AddHumanMessage(content string) {
-	h.Messages = append(h.Messages, llms.TextParts(
-		llms.ChatMessageTypeHuman,
-		content,
-	))
+	h.Messages = append(h.Messages, StoredMessage{
+		Role:    string(llms.ChatMessageTypeHuman),
+		Content: content,
+	})
 }
 
 func (h *History) AddAIMessage(content string) {
 	h.Messages = append(
 		h.Messages,
-		llms.TextParts(
-			llms.ChatMessageTypeAI,
-			content,
-		))
+		StoredMessage{
+			Role:    string(llms.ChatMessageTypeAI),
+			Content: content,
+		})
 }
 
 func (h *History) Marshal() ([]byte, error) {
@@ -42,4 +47,24 @@ func (h *History) Unmarshal(data []byte) error {
 	}
 
 	return nil
+}
+
+func (h *History) ToLLMMessages() []llms.MessageContent {
+	messages := make([]llms.MessageContent, 0, len(h.Messages))
+
+	for _, msg := range h.Messages {
+		messages = append(messages, llms.TextParts(
+			llms.ChatMessageType(msg.Role),
+			msg.Content,
+		))
+	}
+
+	return messages
+}
+
+func (h *History) AddSystemMessage(content string) {
+	h.Messages = append(h.Messages, StoredMessage{
+		Role:    string(llms.ChatMessageTypeSystem),
+		Content: content,
+	})
 }

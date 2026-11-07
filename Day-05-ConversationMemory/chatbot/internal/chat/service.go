@@ -3,6 +3,7 @@ package chat
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/deblinux123/LangChainGo/Day-05-ConversationMemory/chatbot/internal/redisclient"
 	"github.com/tmc/langchaingo/llms"
@@ -36,6 +37,8 @@ func (s *Service) Chat(ctx context.Context, sessionID string, userMessage string
 
 	data, err := s.redis.GetHistory(ctx, sessionID)
 
+	log.Printf("Session: %s", sessionID)
+	log.Printf("Loaded history: %s", string(data))
 	if err != nil {
 		return "", err
 	}
@@ -45,17 +48,16 @@ func (s *Service) Chat(ctx context.Context, sessionID string, userMessage string
 			return "", err
 		}
 	} else {
-		history.Messages = []llms.MessageContent{
-			llms.TextParts(
-				llms.ChatMessageTypeSystem,
-				"You are a helpful assistant. Answer clearly in persian and remember the conversation context.",
-			),
-		}
+		history.AddSystemMessage(
+			"You are a helpful assistant. Answer clearly in persian and remember the conversation context.",
+		)
 	}
 
 	history.AddHumanMessage(userMessage)
 
-	response, err := s.model.GenerateContent(ctx, history.Messages)
+	log.Printf("Messages before LLM: %d", len(history.Messages))
+
+	response, err := s.model.GenerateContent(ctx, history.ToLLMMessages())
 
 	if err != nil {
 		return "", fmt.Errorf("generate response: %w", err)
@@ -68,6 +70,8 @@ func (s *Service) Chat(ctx context.Context, sessionID string, userMessage string
 	answer := response.Choices[0].Content
 
 	history.AddAIMessage(answer)
+
+	log.Printf("Messages before Redis save: %d", len(history.Messages))
 
 	data, err = history.Marshal()
 
