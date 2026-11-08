@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"log"
-	"time"
 
+	"github.com/deblinux123/LangChainGo/Day-06-Embeddings/internal/similarity"
 	"github.com/tmc/langchaingo/embeddings"
 	"github.com/tmc/langchaingo/llms/ollama"
 )
@@ -32,22 +32,48 @@ func main() {
 		"The weather is very cold today.",
 	}
 
-	for i, text := range texts {
-		start := time.Now()
+	vectors, err := embeder.EmbedDocuments(
+		ctx,
+		texts,
+	)
 
-		vector, err := embeder.EmbedQuery(ctx, text)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	score1, err := similarity.CosineSimilarity(vectors[0], vectors[1])
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	score2, err := similarity.CosineSimilarity(vectors[0], vectors[2])
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Printf("Similarity 1: %.4f\n", score1)
+	log.Printf("Similarity 2: %.4f\n", score2)
+
+	user := "im backend developoer with golang. its so simple and i love it."
+
+	userVector, err := embeder.EmbedQuery(ctx, user)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println("User Input:", user)
+	for i := 0; i < len(texts); i++ {
+		score, err := similarity.CosineSimilarity(userVector, vectors[i])
 
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		elapsed := time.Since(start)
-
-		log.Printf(
-			"Document %d | Dimensions: %d | Time: %s\n",
-			i+1,
-			len(vector),
-			elapsed,
-		)
+		log.Printf("Document: %s | Similarity: %.4f",
+			texts[i], score)
 	}
+
 }
