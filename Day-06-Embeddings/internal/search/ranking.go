@@ -51,3 +51,15 @@ func RankDocuments(
 
 	return results, nil
 }
+
+func TopK(results []SearchResult, k int) []SearchResult {
+	if k <= 0 {
+		return []SearchResult{}
+	}
+
+	if k >= len(results) {
+		return results
+	}
+
+	return results[:k]
+}
