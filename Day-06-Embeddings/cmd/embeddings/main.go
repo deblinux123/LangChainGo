@@ -98,4 +98,17 @@ func main() {
 		)
 	}
 
+	topResults := search.TopK(results, 2)
+
+	log.Println("Top-K Results:")
+
+	for i, result := range topResults {
+		log.Printf(
+			"Rank: %d | Score: %.4f | Document: %s",
+			i+1,
+			result.Similarity,
+			result.Text,
+		)
+	}
+
 }
