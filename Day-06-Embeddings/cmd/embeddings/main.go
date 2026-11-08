@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 
+	"github.com/deblinux123/LangChainGo/Day-06-Embeddings/internal/search"
 	"github.com/deblinux123/LangChainGo/Day-06-Embeddings/internal/similarity"
 	"github.com/tmc/langchaingo/embeddings"
 	"github.com/tmc/langchaingo/llms/ollama"
@@ -56,7 +57,7 @@ func main() {
 	log.Printf("Similarity 1: %.4f\n", score1)
 	log.Printf("Similarity 2: %.4f\n", score2)
 
-	user := "im backend developoer with golang. its so simple and i love it."
+	user := "i want to write code for backend"
 
 	userVector, err := embeder.EmbedQuery(ctx, user)
 
@@ -74,6 +75,27 @@ func main() {
 
 		log.Printf("Document: %s | Similarity: %.4f",
 			texts[i], score)
+	}
+
+	results, err := search.RankDocuments(
+		userVector,
+		texts,
+		vectors,
+	)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println("Ranked search results:")
+
+	for i, result := range results {
+		log.Printf(
+			"Rank: %d | Similarity: %.4f | Document: %s",
+			i+1,
+			result.Similarity,
+			result.Text,
+		)
 	}
 
 }
