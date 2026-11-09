@@ -7,18 +7,18 @@ import (
 )
 
 func main() {
-	doc, err := document.LoadeFile("/home/toor/Desktop/all/LangChainGo/Day-07-Document-Loading-and-Text-Splitting/ai.md")
+	docs, err := document.LoadDirectory("/home/toor/Desktop/all/LangChainGo/Day-07-Document-Loading-and-Text-Splitting/data")
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Println("Document content:")
-	log.Println(doc.PageContent)
+	log.Println("[+] File are loaded successfully.")
+	log.Printf("[+] %d Documents are loaded.", len(docs))
 
-	log.Println("\nDocument Metadata:")
-
-	for k, v := range doc.Metadata {
-		log.Printf("%s: %v\n", k, v)
+	for i, doc := range docs {
+		log.Printf("[%d] Document: %v", i+1, doc.Metadata["filename"])
+		log.Println("[+] Content:")
+		log.Println(doc.PageContent)
 	}
 }
