@@ -24,11 +24,11 @@ func NewStore() (vectorstores.VectorStore, error) {
 		return nil, err
 	}
 
-	qdrantURL, err := url.Parse("http:localhost:6333")
+	qdrantURL, err := url.Parse("http://localhost:6333")
 
 	store, err := qdrant.New(
 		qdrant.WithURL(*qdrantURL),
-		qdrant.WithCollectionName("langchain_day08"),
+		qdrant.WithCollectionName("langchaingo_day08"),
 		qdrant.WithEmbedder(embedder),
 	)
 
