@@ -57,4 +57,19 @@ func main() {
 	for i, id := range ids {
 		log.Printf("Document %d ID: %s", i+1, id)
 	}
+
+	query := "How does go handle concurrent tasks?"
+	results, err := store.SimilaritySearch(ctx, query, 2)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println("[+] Search Results:")
+
+	for i, doc := range results {
+		log.Printf("\n--- Result %d ---", i+1)
+		log.Println("Content:", doc.PageContent)
+		log.Println("Metadata:", doc.Metadata)
+	}
 }
