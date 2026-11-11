@@ -6,6 +6,7 @@ import (
 
 	"github.com/deblinux123/LangChainGo/Day-08-Vector-Stores-with-Qdrant/internal/vectorstore"
 	"github.com/tmc/langchaingo/schema"
+	"github.com/tmc/langchaingo/vectorstores"
 )
 
 func main() {
@@ -59,13 +60,36 @@ func main() {
 	}
 
 	query := "How does go handle concurrent tasks?"
-	results, err := store.SimilaritySearch(ctx, query, 2)
+	// results, err := store.SimilaritySearch(
+	// 	ctx,
+	// 	query,
+	// 	2,
+	// 	vectorstores.WithFilters(map[string]any{
+	// 		"must": map[string]any{
+	// 			"key": "category",
+	// 			"match": map[string]any{
+	// 				"value": "programming",
+	// 			},
+	// 		},
+	// 	}),
+	// )
+
+	retriver := vectorstores.ToRetriever(
+		store,
+		2,
+	)
+
+	results, err := retriver.GetRelevantDocuments(
+		ctx,
+		query,
+	)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Println("[+] Search Results:")
+	// log.Println("[+] Search Results:")
+	log.Println("[+] Retriever Results:")
 
 	for i, doc := range results {
 		log.Printf("\n--- Result %d ---", i+1)
