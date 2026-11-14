@@ -12,7 +12,7 @@ const (
 )
 
 type Subscription struct {
-	ID uint `gorm:"primarykey" json:"id"`
+	ID uint `gorm:"primaryKey" json:"id"`
 
 	UserID uint `gorm:"not null;index" json:"user_id"`
 	User   User `gorm:"foreignKey:UserID" json:"-"`
@@ -22,8 +22,8 @@ type Subscription struct {
 
 	Status SubscriptionStatus `gorm:"size:20;not null;index" json:"status"`
 
-	StartAt time.Time  `gorm:"not null" json:"start_at"`
-	EndAt   *time.Time `json:"end_at,omitempty"`
+	StartsAt time.Time  `gorm:"not null" json:"starts_at"`
+	EndsAt   *time.Time `json:"ends_at,omitempty"`
 
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`

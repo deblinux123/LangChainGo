@@ -65,11 +65,11 @@ func (s *Service) CreateSubscription(
 		}
 
 		subscription = models.Subscription{
-			UserID:  user.ID,
-			PlanID:  plan.ID,
-			Status:  models.SubscriptionActive,
-			StartAt: time.Now(),
-			EndAt:   nil,
+			UserID:   user.ID,
+			PlanID:   plan.ID,
+			Status:   models.SubscriptionActive,
+			StartsAt: time.Now(),
+			EndsAt:   nil,
 		}
 
 		if err := tx.Create(&subscription).Error; err != nil {
@@ -82,6 +82,45 @@ func (s *Service) CreateSubscription(
 	if err != nil {
 		return nil, err
 	}
+
+	return &subscription, nil
+}
+func (s *Service) GetActiveSubscription(userID uint) (*models.Subscription, error) {
+	var subscription models.Subscription
+
+	err := s.db.
+		Where(
+			"user_id = ? AND status = ? AND (ends_at IS NULL OR ends_at > ?)",
+			userID,
+			models.SubscriptionActive,
+			time.Now(),
+		).
+		First(&subscription).Error
+
+	if err != nil {
+		return nil, fmt.Errorf(
+			"get active subscription for user %d: %w",
+			userID,
+			err,
+		)
+	}
+
+	var plan models.Plan
+
+	err = s.db.
+		Where("id = ?", subscription.PlanID).
+		First(&plan).Error
+
+	if err != nil {
+		return nil, fmt.Errorf(
+			"get plan %d for subscription %d: %w",
+			subscription.PlanID,
+			subscription.ID,
+			err,
+		)
+	}
+
+	subscription.Plan = plan
 
 	return &subscription, nil
 }

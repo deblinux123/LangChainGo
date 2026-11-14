@@ -1,6 +1,7 @@
 package subscription
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/deblinux123/LangChainGo/Day-09-Building-a-RAG-Application/internal/models"
@@ -11,18 +12,35 @@ import (
 func setupTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
 
+	dsn := fmt.Sprintf(
+		"file:%s?mode=memory&cache=shared",
+		t.Name(),
+	)
+
 	db, err := gorm.Open(
-		sqlite.Open("file:subscription_test?mode=memory&cache=shared"),
+		sqlite.Open(dsn),
 		&gorm.Config{},
 	)
 	if err != nil {
 		t.Fatalf("failed to connect to test database: %v", err)
 	}
 
+	sqlDB, err := db.DB()
+	if err != nil {
+		t.Fatalf("failed to get sql database: %v", err)
+	}
+
+	t.Cleanup(func() {
+		if err := sqlDB.Close(); err != nil {
+			t.Errorf("failed to close test database: %v", err)
+		}
+	})
+
 	err = db.AutoMigrate(
 		&models.User{},
 		&models.Plan{},
 		&models.Subscription{},
+		&models.Usage{},
 	)
 	if err != nil {
 		t.Fatalf("failed to migrate test database: %v", err)
@@ -85,7 +103,7 @@ func TestCreateSubscription(t *testing.T) {
 		t.Errorf("expected active status, got %s", subscription.Status)
 	}
 
-	if subscription.EndAt != nil {
+	if subscription.EndsAt != nil {
 		t.Error("expected Free subscription to have no expiration date")
 	}
 
