@@ -11,6 +11,7 @@ func Migrate(db *gorm.DB) error {
 	if err := db.AutoMigrate(
 		&models.User{},
 		&models.Plan{},
+		&models.Subscription{},
 	); err != nil {
 		return fmt.Errorf("❌ database migration failed: %w", err)
 	}
