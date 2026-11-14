@@ -21,5 +21,15 @@ func main() {
 
 	defer sqlDB.Close()
 
-	log.Println("✅ Database is ready.")
+	if err := database.Migrate(db); err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println("✅ DataBase migration complited.")
+
+	if err := database.SeedPlan(db); err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println("✅ Initial plans created successfully.")
 }
