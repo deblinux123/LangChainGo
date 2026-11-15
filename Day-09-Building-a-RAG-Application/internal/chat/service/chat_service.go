@@ -4,8 +4,11 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/deblinux123/LangChainGo/Day-09-Building-a-RAG-Application/internal/chat/domain"
+	"github.com/deblinux123/LangChainGo/Day-09-Building-a-RAG-Application/internal/models"
+	"github.com/deblinux123/LangChainGo/Day-09-Building-a-RAG-Application/internal/monitoring"
 	"github.com/tmc/langchaingo/llms"
 	"github.com/tmc/langchaingo/llms/ollama"
 )
@@ -13,9 +16,16 @@ import (
 type ChatService struct {
 	llm   *ollama.LLM
 	model string
+
+	usageService *monitoring.UsageService
 }
 
-func NewModelService(model string) (*ChatService, error) {
+func NewChatService(model string, usageService *monitoring.UsageService) (*ChatService, error) {
+
+	if usageService == nil {
+		return nil, fmt.Errorf("❌ usage service cannot be empty.")
+	}
+
 	llm, err := ollama.New(
 		ollama.WithModel(model),
 	)
@@ -25,8 +35,9 @@ func NewModelService(model string) (*ChatService, error) {
 	}
 
 	return &ChatService{
-		llm:   llm,
-		model: model,
+		llm:          llm,
+		model:        model,
+		usageService: usageService,
 	}, nil
 }
 
@@ -45,8 +56,9 @@ func (c *ChatService) Chat(
 		),
 	}
 
+	startTime := time.Now()
+
 	response, err := c.llm.GenerateContent(ctx, messages)
-	fmt.Printf("Raw Ollama Response: %#v\n", response)
 
 	if err != nil {
 		return nil, fmt.Errorf("❌ generate chat response: %w", err)
@@ -58,10 +70,28 @@ func (c *ChatService) Chat(
 
 	answer := response.Choices[0]
 
+	if answer == nil {
+		return nil, fmt.Errorf("🔴 ollama returned a nil choice")
+	}
+
 	generateInfo := answer.GenerationInfo
 	promptToken, _ := generateInfo["PromptTokens"].(int)
 	CompleTokens, _ := generateInfo["CompletionTokens"].(int)
 	totalToken, _ := generateInfo["TotalTokens"].(int)
+
+	usage := &models.Usage{
+		UserID:       req.UserID,
+		Feature:      "chat",
+		Model:        c.model,
+		InputTokens:  int64(promptToken),
+		OutputTokens: int64(CompleTokens),
+		LatencyMs:    time.Since(startTime).Milliseconds(),
+		Status:       models.UsageSuccess,
+	}
+
+	if err := c.usageService.RecordUsage(usage); err != nil {
+		return nil, fmt.Errorf("🔴 record chat usage: %w", err)
+	}
 
 	return &domain.ChatResponse{
 		Answer:           answer.Content,
