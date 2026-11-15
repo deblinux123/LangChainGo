@@ -8,7 +8,7 @@ import (
 
 type LimitChecker struct {
 	subscriptionService *Service
-	usageSevice         *monitoring.UsageService
+	usageService        *monitoring.UsageService
 }
 
 func NewLimitChecker(
@@ -17,28 +17,26 @@ func NewLimitChecker(
 ) *LimitChecker {
 	return &LimitChecker{
 		subscriptionService: subscriptionService,
-		usageSevice:         usageService,
+		usageService:        usageService,
 	}
 }
 
 func (c *LimitChecker) CheckDailyMessageLimit(userID uint) error {
 	subscription, err := c.subscriptionService.GetActiveSubscription(userID)
-
 	if err != nil {
-		return fmt.Errorf("❌ check subscription: %w", err)
+		return fmt.Errorf("check subscription: %w", err)
 	}
 
-	messageCount, err := c.usageSevice.GetDailyMessageCount(userID)
-
+	messageCount, err := c.usageService.GetDailyMessageCount(userID)
 	if err != nil {
-		return fmt.Errorf("❌ check daily usage: %w", err)
+		return fmt.Errorf("check daily usage: %w", err)
 	}
 
 	limit := int64(subscription.Plan.DailyMessageLimit)
 
 	if messageCount >= limit {
 		return fmt.Errorf(
-			"🔴 daily message limit reached: used %d of %d messages",
+			"daily message limit reached: used %d of %d messages",
 			messageCount,
 			limit,
 		)
@@ -49,23 +47,21 @@ func (c *LimitChecker) CheckDailyMessageLimit(userID uint) error {
 
 func (c *LimitChecker) CheckMonthlyTokenLimit(userID uint) error {
 	subscription, err := c.subscriptionService.GetActiveSubscription(userID)
-
 	if err != nil {
-		return fmt.Errorf("❌ check subscription: %w", err)
+		return fmt.Errorf("check subscription: %w", err)
 	}
 
-	messageCount, err := c.usageSevice.GetMonthlyTokenUsage(userID)
-
+	tokenUsage, err := c.usageService.GetMonthlyTokenUsage(userID)
 	if err != nil {
-		return fmt.Errorf("❌ check monthly usage: %w", err)
+		return fmt.Errorf("check monthly usage: %w", err)
 	}
 
-	limit := int64(subscription.Plan.MonthlyTokenLimit)
+	limit := subscription.Plan.MonthlyTokenLimit
 
-	if messageCount >= limit {
+	if tokenUsage >= limit {
 		return fmt.Errorf(
-			"🔴 Monthly token limit reached: used %d of %d messages",
-			messageCount,
+			"monthly token limit reached: used %d of %d tokens",
+			tokenUsage,
 			limit,
 		)
 	}

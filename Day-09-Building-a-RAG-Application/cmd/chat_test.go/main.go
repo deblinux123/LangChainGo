@@ -10,6 +10,7 @@ import (
 	"github.com/deblinux123/LangChainGo/Day-09-Building-a-RAG-Application/internal/database"
 	"github.com/deblinux123/LangChainGo/Day-09-Building-a-RAG-Application/internal/models"
 	"github.com/deblinux123/LangChainGo/Day-09-Building-a-RAG-Application/internal/monitoring"
+	"github.com/deblinux123/LangChainGo/Day-09-Building-a-RAG-Application/internal/subscription"
 )
 
 func main() {
@@ -48,10 +49,17 @@ func main() {
 	defer cancel()
 
 	usageSVC := monitoring.NewUsageService(db)
+	subscripSVC := subscription.NewService(db)
+
+	limitChecker := subscription.NewLimitChecker(
+		subscripSVC,
+		usageSVC,
+	)
 
 	chatSVC, err := service.NewChatService(
 		"qwen3.5:4b",
 		usageSVC,
+		limitChecker,
 	)
 
 	if err != nil {
@@ -68,7 +76,20 @@ func main() {
 	if err := db.Where(
 		"email = ?", testUser.Email,
 	).FirstOrCreate(&testUser).Error; err != nil {
-		log.Fatal("❌ create test user: %w", err)
+		log.Fatalf("❌ create test user: %v", err)
+	}
+
+	_, err = subscripSVC.GetActiveSubscription(testUser.ID)
+
+	if err != nil {
+		_, err := subscripSVC.CreateSubscription(
+			testUser.ID,
+			models.PlanFree,
+		)
+		if err != nil {
+			log.Fatalf("❌ create test subscription: %v", err)
+		}
+
 	}
 
 	response, err := chatSVC.Chat(
